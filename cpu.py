@@ -1,18 +1,20 @@
+
+import sys
+
+
 class CPU:
     """Main CPU class."""
 
-    import sys
-
     def __init__(self):
         """Construct a new CPU."""
-        # set memory with 256 bytes
+        # memory with 256
         self.ram = [0] * 256
 
-        # register
+        # Register, general purpose memory
         self.reg = [0] * 8
-        # intiallize the last spot in the register to the pointer of the beginning of the stack
+        # Initialize the last spot
         self.reg[7] = 0xf4
-        # program counter to track
+
         self.pc = 0
 
         self.stp = self.reg[7]
@@ -48,9 +50,9 @@ class CPU:
         # Dynamic load method
         address = 0
 
-        with open(sys.args[1]) as f:
+        with open(sys.argv[1]) as f:
             for line in f:
-                split_line = line.split(' ')[0].strip("/n")
+                split_line = line.split(' ')[0].strip("\n")
                 if len(split_line) == 8:
                     self.ram[address] = int(split_line, 2)
                     address += 1
@@ -110,10 +112,11 @@ class CPU:
         if mask == 0b00000000:
             self.JMP()
         else:
-            self.pc + 2
+            self.pc += 2
 
     def JMP(self):
         reg_address = self.ram_read(self.pc + 1)
+
         self.pc = self.reg[reg_address]
 
     def CMP(self):
@@ -127,7 +130,7 @@ class CPU:
     def PRN(self):
         reg_address = self.ram_read(self.pc + 1)
         value = self.reg[reg_address]
-        print(f'PRN -> {value}')
+        print(value)
 
     def LDI(self):
         reg_address = self.ram_read(self.pc+1)
@@ -157,7 +160,6 @@ class CPU:
         self.alu("ADD", num1, num2)
 
     def CALL(self):
-        # adding to stack to decrement the pointer
         self.stp -= 1
 
         return_address = self.pc + 2
@@ -176,21 +178,21 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
+
         while self.running:
+            # ir = instruction register
             ir = self.ram_read(self.pc)
 
             if ir in self.branch_table:
                 self.branch_table[ir]()
-                # create a mask and then shifts
+
                 operands = (ir & 0b11000000) >> 6
 
-                # create mask and shifts unneeded numbers for the bit
                 pc_param = (ir & 0b00010000) >> 4
 
                 if not pc_param:
-
                     self.pc += operands + 1
 
             else:
-                print(f'unknown {ir}  address {self.pc}')
+                print(f'Unknown Instruction {ir} as address {self.pc}')
                 sys.exit(1)
